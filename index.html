@@ -196,7 +196,7 @@ window.addEventListener('error', function(e){
   var v = document.getElementById('view'); if (!v) return;
   var d = document.createElement('div');
   d.style.cssText = 'margin:24px 0;padding:16px;border:1px solid #f2b866;border-radius:12px;color:#fff3e8;background:#380909;font:14px/1.5 system-ui,sans-serif';
-  d.textContent = 'hangout.io could not start. Message: ' + (e.message || 'unknown error') + (e.lineno ? ' (line ' + e.lineno + ')' : '') + '. Upload the original index.html again.';
+  d.textContent = 'hangout.io could not start. Message: ' + (e.message || 'unknown error') + (e.lineno ? ' (line ' + e.lineno + ')' : '') + '. If you edited the Discord link, check that line, or upload the original index.html again.';
   v.appendChild(d);
 });
 </script>
@@ -205,20 +205,23 @@ window.addEventListener('error', function(e){
 'use strict';
 
 /* ===== SET THIS UP =====
-   1. In Discord, open your server, tap the server name, choose Invite, and copy the link.
-   2. Replace the five placeholder links below with that link. For a room, you can paste the link
-      of a specific voice channel instead (long-press the channel, Copy Link).
+   Change ONLY the link on the line below. Keep the quote marks and the semicolon.
+   Get it in Discord: open your server, tap the server name, tap Invite, copy the link.
+   Example:  const MY_DISCORD_LINK = 'https://discord.gg/abc123';
 */
+const MY_DISCORD_LINK = 'https://discord.gg/YOUR_INVITE';
+/* ======================= */
+
+/* Rooms. Leave this part as it is. Every room opens your server by default. */
 const CONFIG = {
-  serverInvite: 'https://discord.gg/YOUR_INVITE',
+  serverInvite: MY_DISCORD_LINK,
   rooms: [
-    {name:'Study Hall',    topic:'Open room for quiet group study. Cameras optional.', link:https://discord.gg/yyGkFcMJ
-    {name:'Group Project', topic:'Work on shared assignments and split up tasks.',     link:https://discord.gg/KZd3PtnP
-    {name:'Exam Prep',     topic:'Quiz each other and go over past papers.',           link:https://discord.gg/PPre7UnG
-    {name:'Lounge',        topic:'Take a break and talk about anything but homework.', link:https://discord.gg/szZNYEf8
+    {name:'Study Hall',    topic:'Open room for quiet group study. Cameras optional.', link: MY_DISCORD_LINK},
+    {name:'Group Project', topic:'Work on shared assignments and split up tasks.',     link: MY_DISCORD_LINK},
+    {name:'Exam Prep',     topic:'Quiz each other and go over past papers.',           link: MY_DISCORD_LINK},
+    {name:'Lounge',        topic:'Take a break and talk about anything but homework.', link: MY_DISCORD_LINK}
   ]
 };
-/* ======================= */
 
 const $ = (s, r) => (r || document).querySelector(s);
 function h(tag, attrs, ...kids){
