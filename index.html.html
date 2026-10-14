@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>hangout.io</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Pinyon+Script&family=Pixelify+Sans:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* Layout concept: dark maroon stage with corner spider webs and a hanging spider; script wordmark top left, sign in / sign up top right; after sign-in a menu of tools led by Group meeting. */
+:root{
+  --bg:#2a0505; --bg-deep:#1a0303; --surface:#380909; --surface2:#4a1010; --line:#6b1d1d;
+  --fg:#fff3e8; --muted:#dcbcab; --gold:#f2b866; --gold-ink:#2a0505; --red:#d11f35; --web:#fff3e8;
+  --shadow:0 12px 30px rgba(0,0,0,.45);
+  --font-pixel:'Pixelify Sans','Courier New',ui-monospace,monospace;
+  --font-script:'Pinyon Script','Snell Roundhand','Brush Script MT',cursive;
+  --font-body:'Montserrat',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.55 var(--font-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  min-height:100vh; position:relative; overflow-x:hidden;
+  -webkit-text-size-adjust:100%;
+}
+h1,h2,h3,p{margin:0}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.wrap{max-width:1040px;margin:0 auto;position:relative;z-index:1}
+.ico{display:inline-flex;flex:none}
+
+/* Corner webs */
+.webs{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;background:radial-gradient(120% 80% at 50% 0%,rgba(209,31,53,.14),transparent 60%)}
+.web{position:absolute;width:min(46vw,340px);color:var(--web);opacity:.34}
+.web.tl{left:0;top:0}
+.web.tr{right:0;top:0;transform:scaleX(-1)}
+.web.br{right:0;bottom:0;transform:rotate(180deg)}
+
+/* Header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:linear-gradient(var(--bg) 70%,transparent)}
+.top .wrap{display:flex;align-items:center;gap:12px;min-height:72px;padding-block:8px}
+.logo{display:inline-flex;align-items:baseline;text-decoration:none;font:400 44px/1 var(--font-script);color:var(--fg);white-space:nowrap;background:none;border:0;padding:0;cursor:pointer}
+.logo .h{font-size:1.35em;line-height:.6}
+.logo .io{color:var(--gold)}
+.auth{margin-left:auto;display:flex;gap:8px;align-items:center}
+.who{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 6px 0 4px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+.who .av{width:34px;height:34px;border-radius:50%;background:var(--gold);color:var(--gold-ink);display:grid;place-items:center;font:700 16px var(--font-pixel)}
+.who .nm{font-weight:600;max-width:14ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:520px){.logo{font-size:36px}.who .nm{display:none}.who{padding:0 4px}}
+
+/* Buttons */
+.btn{min-height:46px;padding:0 20px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;text-decoration:none}
+.btn:hover{border-color:var(--gold)}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:var(--gold-ink)}
+.btn.gold:hover{filter:brightness(1.07)}
+.btn.sm{min-height:40px;padding:0 14px;font-size:14px}
+.btn[aria-disabled="true"]{opacity:.5;pointer-events:none}
+
+/* Landing */
+.hero{position:relative;padding:56px 0 48px;min-height:min(70vh,560px);display:flex;flex-direction:column;justify-content:center}
+.hero-in{display:flex;flex-direction:column;gap:20px;max-width:640px;padding-left:clamp(0px,6vw,64px)}
+.eyebrow{font:700 12px/1 var(--font-body);text-transform:uppercase;letter-spacing:.18em;color:var(--gold)}
+h1.pix{font:700 clamp(36px,9vw,72px)/1.04 var(--font-pixel);text-transform:uppercase;letter-spacing:.01em}
+h1.pix span{color:var(--gold)}
+.lede{color:var(--muted);font-size:17px;max-width:46ch}
+.cta{display:flex;gap:10px;flex-wrap:wrap}
+.thread{position:absolute;left:clamp(6px,2vw,24px);top:-8px;color:var(--fg);transform-origin:50% 0;animation:sway 5s ease-in-out infinite}
+@keyframes sway{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
+.strip{display:flex;gap:8px;flex-wrap:wrap;padding:8px 0 40px}
+.pill{padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:600;color:var(--muted)}
+
+/* Home */
+.greet{padding:20px 0 24px;display:flex;flex-direction:column;gap:6px}
+.greet h1{font:700 clamp(30px,7vw,54px)/1.05 var(--font-pixel);text-transform:uppercase}
+.greet h1 span{color:var(--gold)}
+.sub{color:var(--muted);max-width:56ch}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:14px;padding-bottom:48px}
+.tile{position:relative;display:flex;flex-direction:column;gap:10px;text-align:left;padding:20px;border-radius:18px;border:1px solid var(--line);background:var(--surface);cursor:pointer;min-width:0;min-height:170px}
+.tile:hover{border-color:var(--gold);background:var(--surface2)}
+.tile .ti{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:var(--bg-deep);color:var(--gold)}
+.tile h3{font:700 22px/1.1 var(--font-pixel);text-transform:uppercase;overflow-wrap:anywhere}
+.tile p{color:var(--muted);font-size:14px}
+.tile.big{background:var(--gold);border-color:var(--gold);color:var(--gold-ink)}
+.tile.big .ti{background:var(--gold-ink);color:var(--gold)}
+.tile.big p{color:#4a1a0a}
+.tile.big:hover{filter:brightness(1.06);background:var(--gold)}
+@media (min-width:700px){.tile.big{grid-column:span 2}}
+
+/* Screens */
+.screen{padding:12px 0 56px;display:flex;flex-direction:column;gap:20px}
+.back{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px 0 6px;border:0;background:transparent;color:var(--muted);font-weight:600;cursor:pointer}
+.back:hover{color:var(--gold)}
+.screen h2{font:700 clamp(28px,6vw,44px)/1.05 var(--font-pixel);text-transform:uppercase}
+.screen h2 span{color:var(--gold)}
+.notice{display:flex;gap:10px;padding:12px 14px;border-radius:12px;background:var(--surface2);border:1px solid var(--line);font-size:14px}
+.notice code{font-family:ui-monospace,Menlo,monospace;font-size:13px;background:var(--bg-deep);padding:1px 6px;border-radius:6px}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr));gap:14px}
+.card{position:relative;display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:18px;border:1px solid var(--line);background:var(--surface);min-width:0;overflow:hidden}
+.card h3{font:700 20px/1.15 var(--font-pixel);text-transform:uppercase;overflow-wrap:anywhere}
+.card p{color:var(--muted);font-size:14px}
+.card .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:6px}
+.chip{display:inline-flex;align-self:flex-start;padding:3px 10px;border-radius:999px;background:var(--gold);color:var(--gold-ink);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.block{display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:18px;border:1px solid var(--line);background:var(--surface)}
+.block h3{font:700 20px/1.1 var(--font-pixel);text-transform:uppercase;color:var(--gold)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:760px){.two{grid-template-columns:minmax(0,1fr)}}
+.form{display:flex;flex-direction:column;gap:14px}
+label.fl{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:14px}
+label.fl small{font-weight:400;color:var(--muted)}
+.field{width:100%;min-height:48px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg-deep);color:var(--fg);font:inherit;font-size:16px}
+textarea.field{padding:12px 14px;min-height:140px;resize:vertical;line-height:1.5}
+.err{color:#ff9aa6;font-weight:600;min-height:1.2em}
+.share{font:500 13px/1.4 ui-monospace,Menlo,monospace;background:var(--bg-deep);padding:10px 12px;border-radius:10px;overflow-wrap:anywhere}
+
+.bggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:12px}
+.thumb{position:relative;display:block;width:100%;aspect-ratio:16/10;border-radius:16px;border:1px solid var(--line);background-size:cover;background-position:center;cursor:pointer;padding:0;overflow:hidden}
+.thumb:hover{border-color:var(--gold)}
+.thumb .tl{position:absolute;left:0;right:0;bottom:0;padding:22px 12px 10px;background:linear-gradient(to top,rgba(0,0,0,.75),transparent);color:#fff;font-weight:700;text-align:left}
+.thumb .tl small{display:block;font-weight:500;opacity:.85}
+
+/* Timer */
+.clock{display:grid;place-items:center;position:relative;width:min(100%,280px);margin:0 auto}
+.clock svg{width:100%;height:auto;transform:rotate(-90deg)}
+.clock .t{position:absolute;font:700 clamp(44px,12vw,64px)/1 var(--font-pixel);font-variant-numeric:tabular-nums}
+.seg{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.seg button{min-height:42px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--bg-deep);font-weight:600;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:var(--gold-ink)}
+.ctrls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+/* Groups + picker */
+.groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:12px}
+.group{padding:14px;border-radius:14px;background:var(--bg-deep);border:1px solid var(--line)}
+.group h4{margin:0 0 6px;font:700 16px var(--font-pixel);text-transform:uppercase;color:var(--gold)}
+.group ul{margin:0;padding-left:18px}
+.pickbox{display:grid;place-items:center;min-height:140px;padding:20px;border-radius:18px;background:var(--bg-deep);border:1px dashed var(--gold);font:700 clamp(28px,8vw,52px)/1.1 var(--font-pixel);text-transform:uppercase;text-align:center;overflow-wrap:anywhere}
+.pickbox.done{color:var(--gold);border-style:solid}
+.checkrow{display:flex;align-items:center;gap:10px;font-size:14px;min-height:36px}
+.checkrow input{width:20px;height:20px;accent-color:var(--gold)}
+
+footer{position:relative;z-index:1;padding:24px 0 36px;color:var(--muted);font-size:13px;text-align:center}
+
+/* Sheet + toast */
+.scrim{position:fixed;inset:0;z-index:50;background:rgba(10,1,1,.72);display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.sheet{width:min(560px,100%);max-height:100%;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px}
+.sheet-h{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sheet-h h2{font:700 24px/1.1 var(--font-pixel);text-transform:uppercase;color:var(--gold)}
+.icon-btn{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--bg-deep);display:inline-grid;place-items:center;cursor:pointer;flex:none}
+.sheet img{width:100%;height:auto;border-radius:14px;display:block}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:60;background:var(--gold);color:var(--gold-ink);padding:10px 16px;border-radius:999px;font-weight:700;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+</head>
+<body>
+<div class="webs" id="webs" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="wrap">
+    <button class="logo" id="logo" type="button" aria-label="hangout.io home"></button>
+    <div class="auth" id="auth"></div>
+  </div>
+</header>
+
+<main class="wrap" id="view"></main>
+<footer>hangout.io · Meetings, voice and chat run on Discord.</footer>
+
+<div class="scrim" id="scrim" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ===== SET THIS UP =====
+   1. In Discord, open your server, tap the server name, choose Invite, and copy the link.
+   2. Replace the five placeholder links below with that link. For a room, you can paste the link
+      of a specific voice channel instead (long-press the channel, Copy Link).
+*/
+const CONFIG = {
+  serverInvite: 'https://discord.gg/YOUR_INVITE',
+  rooms: [
+    {name:'Study Hall',    topic:'Open room for quiet group study. Cameras optional.', link:'https://discord.gg/YOUR_INVITE'},
+    {name:'Group Project', topic:'Work on shared assignments and split up tasks.',     link:'https://discord.gg/YOUR_INVITE'},
+    {name:'Exam Prep',     topic:'Quiz each other and go over past papers.',           link:'https://discord.gg/YOUR_INVITE'},
+    {name:'Lounge',        topic:'Take a break and talk about anything but homework.', link:'https://discord.gg/YOUR_INVITE'}
+  ]
+};
+/* ======================= */
+
+const $ = (s, r) => (r || document).querySelector(s);
+function h(tag, attrs, ...kids){
+  const e = document.createElement(tag);
+  if (attrs) for (const k in attrs){
+    const v = attrs[k];
+    if (v == null || v === false) continue;
+    if (k === 'class') e.className = v;
+    else if (k === 'text') e.textContent = v;
+    else if (k === 'value') e.value = v;
+    else if (k.slice(0,2) === 'on') e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat()){ if (c == null || c === false) continue; e.append(c.nodeType ? c : document.createTextNode(String(c))); }
+  return e;
+}
+const ls = {
+  get(k, d){ try{ const v = localStorage.getItem('hio.'+k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem('hio.'+k, JSON.stringify(v)); }catch(e){} }
+};
+const OK_HOSTS = ['discord.gg','discord.com','www.discord.com'];
+function safeLink(u){
+  try{ const x = new URL(String(u || '').trim()); return (x.protocol === 'https:' && OK_HOSTS.indexOf(x.hostname) > -1) ? x.href : null; }
+  catch(e){ return null; }
+}
+const isPlaceholder = u => String(u || '').indexOf('YOUR' + '_INVITE') > -1;
+let toastT;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2400); }
+async function copyText(text, ok){
+  try{ await navigator.clipboard.writeText(text); toast(ok || 'Copied'); }
+  catch(e){ toast('Press and hold the text to copy it'); }
+}
+function ico(inner, size){
+  const s = document.createElement('span'); s.className = 'ico';
+  s.innerHTML = '<svg viewBox="0 0 24 24" width="'+(size||24)+'" height="'+(size||24)+'" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+inner+'</svg>';
+  return s;
+}
+const I = {
+  meet:'<rect x="3" y="6" width="12" height="12" rx="3"/><path d="M15 10.5l6-3.5v10l-6-3.5"/>',
+  chat:'<path d="M4 5h16v11H9l-5 4z"/>',
+  looks:'<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-5 4 4 3-3 4 4"/>',
+  timer:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 3h6"/>',
+  groups:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0M16 5a3.5 3.5 0 010 7M18 14a6.5 6.5 0 013.5 6"/>',
+  pick:'<rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="9" cy="15" r="1"/>',
+  back:'<path d="M15 5l-7 7 7 7"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>'
+};
+function rand(n){ const b = new Uint32Array(1); crypto.getRandomValues(b); return b[0] % n; }
+function shuffle(a){ a = a.slice(); for (let i = a.length-1; i > 0; i--){ const j = rand(i+1); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function parseNames(t){ const seen = {}, out = []; String(t || '').split(/[\n,]+/).forEach(x => { x = x.trim().slice(0,30); if (x && !seen[x.toLowerCase()]){ seen[x.toLowerCase()] = 1; out.push(x); } }); return out.slice(0, 60); }
+
+/* ---------- web art ---------- */
+function webLines(stroke, sw){
+  let d = '';
+  for (let i=0;i<=6;i++){ const a = i*Math.PI/12; d += 'M0 0L'+(Math.cos(a)*600).toFixed(0)+' '+(Math.sin(a)*600).toFixed(0); }
+  const p = (a,r) => (Math.cos(a)*r).toFixed(1)+' '+(Math.sin(a)*r).toFixed(1);
+  for (let k=1;k<=8;k++){
+    const R = k*46;
+    for (let i=0;i<6;i++){
+      const a0 = i*Math.PI/12, a1 = (i+1)*Math.PI/12, am = (a0+a1)/2;
+      d += (i ? '' : 'M'+p(a0,R)) + 'Q'+p(am,R*0.9)+' '+p(a1,R);
+    }
+  }
+  return '<path d="'+d+'" fill="none" stroke="'+stroke+'" stroke-width="'+(sw||1.3)+'"/>';
+}
+const cornerWeb = () => '<svg viewBox="0 0 380 380" width="100%" aria-hidden="true">'+webLines('currentColor', 1.3)+'</svg>';
+$('#webs').innerHTML = ['tl','tr','br'].map(c => '<div class="web '+c+'">'+cornerWeb()+'</div>').join('');
+function spiderThread(){
+  const s = h('span', {class:'thread', 'aria-hidden':'true'});
+  s.innerHTML = '<svg viewBox="0 0 64 260" width="48" height="196" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M32 0V176" stroke-width="1.3"/><ellipse cx="32" cy="204" rx="9" ry="12" fill="currentColor"/><circle cx="32" cy="186" r="6" fill="currentColor"/><path d="M24 196l-14-9-6 7M24 202l-17 2-5 12M24 208l-12 11-1 11M40 196l14-9 6 7M40 202l17 2 5 12M40 208l12 11 1 11"/></svg>';
+  return s;
+}
+
+/* ---------- profile (this device only) ---------- */
+const auth = {
+  profile(){ return ls.get('profile', null); },
+  signedIn(){ return !!(this.profile() && ls.get('signedIn', false)); },
+  signUp(name, group){ ls.set('profile', {name, group}); ls.set('signedIn', true); },
+  signIn(){ ls.set('signedIn', true); },
+  signOut(){ ls.set('signedIn', false); }
+};
+
+/* ---------- sheet ---------- */
+function openSheet(title, ...kids){
+  $('#sheet').replaceChildren(h('div', {class:'sheet-h'}, h('h2', {text:title}), h('button', {class:'icon-btn', type:'button', 'aria-label':'Close', onclick:closeSheet}, ico(I.x, 20))), ...kids);
+  $('#scrim').hidden = false;
+  const f = $('#sheet input'); if (f) setTimeout(() => f.focus(), 30);
+}
+function closeSheet(){ $('#scrim').hidden = true; }
+$('#scrim').addEventListener('click', e => { if (e.target.id === 'scrim') closeSheet(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+
+function signUpSheet(){
+  const name = h('input', {class:'field', id:'suName', maxlength:'30', placeholder:'Your name', autocomplete:'nickname'});
+  const grp = h('input', {class:'field', id:'suGroup', maxlength:'30', placeholder:'e.g. Class 11A', autocomplete:'off'});
+  const err = h('p', {class:'err', role:'alert'});
+  openSheet('Sign up', h('form', {class:'form', novalidate:true, onsubmit: e => {
+    e.preventDefault();
+    const n = name.value.trim(); if (!n){ err.textContent = 'Enter your name.'; return; }
+    auth.signUp(n, grp.value.trim()); closeSheet(); show('home'); toast('Welcome, ' + n);
+  }},
+    h('label', {class:'fl', for:'suName'}, 'Name', name),
+    h('label', {class:'fl', for:'suGroup'}, 'Class or group', h('small', {text:'Optional'}), grp),
+    h('p', {class:'sub', text:'Your profile is saved on this device only.'}),
+    err, h('button', {class:'btn gold', type:'submit'}, 'Create profile'),
+    h('button', {class:'btn', type:'button', onclick:signInSheet}, 'I already have a profile')));
+}
+function signInSheet(){
+  const p = auth.profile();
+  if (!p){
+    openSheet('Sign in', h('div', {class:'form'},
+      h('p', {class:'sub', text:'No profile was found on this device yet. Sign up first, it takes a few seconds.'}),
+      h('button', {class:'btn gold', type:'button', onclick:signUpSheet}, 'Sign up')));
+    return;
+  }
+  openSheet('Sign in', h('div', {class:'form'},
+    h('p', {text:'Welcome back, ' + p.name + '.'}),
+    h('button', {class:'btn gold', type:'button', onclick:() => { auth.signIn(); closeSheet(); show('home'); }}, 'Sign in as ' + p.name),
+    h('p', {class:'sub', text:'Not you? Sign up with a different name.'}),
+    h('button', {class:'btn', type:'button', onclick:signUpSheet}, 'Sign up as someone else')));
+}
+function drawAuth(){
+  const a = $('#auth');
+  if (auth.signedIn()){
+    const p = auth.profile();
+    a.replaceChildren(
+      h('span', {class:'who'}, h('span', {class:'av', text:(p.name || '?').trim()[0].toUpperCase(), 'aria-hidden':'true'}), h('span', {class:'nm', text:p.name})),
+      h('button', {class:'btn sm', type:'button', onclick:() => { auth.signOut(); show('landing'); toast('Signed out'); }}, 'Sign out'));
+  } else {
+    a.replaceChildren(
+      h('button', {class:'btn sm', type:'button', onclick:signInSheet}, 'Sign in'),
+      h('button', {class:'btn sm gold', type:'button', onclick:signUpSheet}, 'Sign up'));
+  }
+}
+$('#logo').append(h('span', {class:'h', text:'H'}), 'angout', h('span', {class:'io', text:'.io'}));
+$('#logo').addEventListener('click', () => show(auth.signedIn() ? 'home' : 'landing'));
+
+/* ---------- views ---------- */
+let cleanup = null;
+const view = $('#view');
+function show(name){
+  if (cleanup){ try{ cleanup(); }catch(e){} cleanup = null; }
+  if (!auth.signedIn() && name !== 'landing') name = 'landing';
+  view.replaceChildren(VIEWS[name]());
+  window.scrollTo(0, 0);
+  drawAuth();
+}
+function screen(title, ...body){
+  return h('div', {class:'screen'},
+    h('button', {class:'back', type:'button', onclick:() => show('home')}, ico(I.back, 20), 'Home'),
+    h('h2', {}, title), ...body);
+}
+
+function landing(){
+  return h('div', {},
+    h('section', {class:'hero'}, spiderThread(),
+      h('div', {class:'hero-in'},
+        h('span', {class:'eyebrow', text:'Study rooms for students'}),
+        h('h1', {class:'pix'}, 'Study together.', h('br'), h('span', {text:'Hang out.'})),
+        h('p', {class:'lede', text:'Meet your group with camera, voice and chat, then use handy tools to get the work done. Sign up to come in.'}),
+        h('div', {class:'cta'},
+          h('button', {class:'btn gold', type:'button', onclick:signUpSheet}, 'Sign up'),
+          h('button', {class:'btn', type:'button', onclick:signInSheet}, 'Sign in')))),
+    h('div', {class:'strip'}, ['Group meetings','Chat','Backgrounds','Focus timer','Group maker','Pick a presenter'].map(t => h('span', {class:'pill', text:t}))));
+}
+
+const TOOLS = [
+  {id:'meet',   title:'Group meeting',  icon:I.meet,   big:true, desc:'Open a study room and meet your group on Discord with camera and voice.'},
+  {id:'chat',   title:'Chat',           icon:I.chat,   desc:'Group chat and private messages on Discord.'},
+  {id:'looks',  title:'Backgrounds',    icon:I.looks,  desc:'Pick a scene to use behind you on camera.'},
+  {id:'timer',  title:'Focus timer',    icon:I.timer,  desc:'25 minutes of focus, then a short break.'},
+  {id:'groups', title:'Group maker',    icon:I.groups, desc:'Split your class list into fair random teams.'},
+  {id:'pick',   title:'Pick a presenter', icon:I.pick, desc:'Let luck decide who goes first.'}
+];
+function home(){
+  const p = auth.profile() || {name:'there'};
+  return h('div', {},
+    h('div', {class:'greet'}, h('h1', {}, 'Hi, ', h('span', {text:p.name})), h('p', {class:'sub', text:'What do you want to do today?'})),
+    h('div', {class:'tiles'}, TOOLS.map(t => h('button', {class:'tile'+(t.big ? ' big' : ''), type:'button', onclick:() => show(t.id)},
+      h('span', {class:'ti'}, ico(t.icon, 26)), h('h3', {text:t.title}), h('p', {text:t.desc})))));
+}
+
+/* --- group meeting --- */
+let mine = ls.get('mine', []);
+const params = (function(){ try{ return new URLSearchParams(location.search); }catch(e){ return new URLSearchParams(''); } })();
+const invited = (function(){
+  const n = (params.get('room') || '').trim().slice(0, 40), l = safeLink(params.get('link'));
+  return n && l ? {name:n, topic:'Shared with you. Tap join to meet them on Discord.', link:l, tag:'Shared with you'} : null;
+})();
+function shareUrl(r){
+  let base = ''; try{ base = location.href.split('#')[0].split('?')[0]; }catch(e){}
+  return base + '?room=' + encodeURIComponent(r.name) + '&link=' + encodeURIComponent(r.link);
+}
+function roomCard(r, extra){
+  const link = safeLink(r.link), ready = link && !isPlaceholder(r.link);
+  return h('article', {class:'card'},
+    r.tag ? h('span', {class:'chip', text:r.tag}) : null,
+    h('h3', {text:r.name}), h('p', {text:r.topic || ''}),
+    h('div', {class:'row'},
+      h('a', {class:'btn gold', href: ready ? link : '#', target:'_blank', rel:'noopener noreferrer', 'aria-disabled': ready ? null : 'true'}, ready ? 'Join on Discord' : 'Link not set'), extra));
+}
+function meet(){
+  const cards = h('div', {class:'cards'}), out = h('div', {class:'block'}), note = h('div');
+  const draw = () => {
+    const list = [];
+    if (invited) list.push(roomCard(invited));
+    CONFIG.rooms.forEach(r => list.push(roomCard(r)));
+    mine.forEach((r, i) => list.push(roomCard({name:r.name, topic:'Your room. Saved on this device.', link:r.link, tag:'Yours'},
+      [h('button', {class:'btn sm', type:'button', onclick:() => copyText(shareUrl(r), 'Share link copied')}, 'Copy share link'),
+       h('button', {class:'btn sm', type:'button', onclick:() => { mine.splice(i, 1); ls.set('mine', mine); draw(); }}, 'Remove')])));
+    cards.replaceChildren(...list);
+    const unset = CONFIG.rooms.some(r => isPlaceholder(r.link));
+    note.replaceChildren(...(unset ? [h('div', {class:'notice'}, h('span', {}, 'Discord is not connected yet. Open ', h('code', {text:'index.html'}), ' and replace ', h('code', {text:'YOUR_' + 'INVITE'}), ' with your Discord invite link.'))] : []));
+  };
+  const name = h('input', {class:'field', id:'mName', maxlength:'40', placeholder:'Chemistry group, Thursday', autocomplete:'off'});
+  const link = h('input', {class:'field', id:'mLink', inputmode:'url', placeholder:'https://discord.gg/…', autocomplete:'off', autocapitalize:'off'});
+  const err = h('p', {class:'err', role:'alert'});
+  out.append(h('h3', {text:'Make your own room'}),
+    h('p', {class:'sub', text:'Create a voice channel in Discord, copy its link, and paste it here. Make the channel private in Discord if you want only your group inside.'}),
+    h('form', {class:'form', novalidate:true, onsubmit: e => {
+      e.preventDefault();
+      const n = name.value.trim(), l = safeLink(link.value);
+      if (!n){ err.textContent = 'Give the room a name.'; return; }
+      if (!l){ err.textContent = 'Paste a link that starts with https://discord.gg or https://discord.com.'; return; }
+      err.textContent = '';
+      const r = {name:n, link:l};
+      mine = [r].concat(mine.filter(x => x.link !== l || x.name !== n)).slice(0, 12); ls.set('mine', mine); draw();
+      const url = shareUrl(r);
+      shareOut.replaceChildren(h('p', {text:'Room ready. Send this link to your group:'}), h('div', {class:'share', text:url}),
+        h('button', {class:'btn sm', type:'button', onclick:() => copyText(url, 'Share link copied')}, 'Copy share link'));
+      name.value = ''; link.value = '';
+    }},
+      h('label', {class:'fl', for:'mName'}, 'Room name', name),
+      h('label', {class:'fl', for:'mLink'}, 'Discord link', link),
+      err, h('button', {class:'btn gold', type:'submit'}, 'Make room')));
+  const shareOut = h('div', {class:'form'});
+  out.append(shareOut);
+  draw();
+  return screen(['Group ', h('span', {text:'meeting'})],
+    h('p', {class:'sub', text:'Pick a room to open it in Discord. Turn your camera on there and meet your group.'}), note, cards, out);
+}
+
+/* --- chat --- */
+function chat(){
+  const sl = safeLink(CONFIG.serverInvite), ready = sl && !isPlaceholder(CONFIG.serverInvite);
+  return screen(['Chat'],
+    h('p', {class:'sub', text:'Talk before, during and after meetings. It all lives in Discord.'}),
+    h('div', {class:'cards'},
+      h('article', {class:'card'}, h('h3', {text:'Group chat'}), h('p', {text:'Every room has a text chat next to its voice channel. Share links and notes while you meet.'}),
+        h('div', {class:'row'}, h('a', {class:'btn gold', href: ready ? sl : '#', target:'_blank', rel:'noopener noreferrer', 'aria-disabled': ready ? null : 'true'}, ready ? 'Open the server' : 'Server link not set'))),
+      h('article', {class:'card'}, h('h3', {text:'Private messages'}), h('p', {text:'In Discord, tap a person\'s name and choose Message to chat one to one. It works any time, even with no meeting running.'}),
+        h('div', {class:'row'}, h('a', {class:'btn', href:'https://discord.com/app', target:'_blank', rel:'noopener noreferrer'}, 'Open Discord')))));
+}
+
+/* --- backgrounds --- */
+function lcg(seed){ return () => (seed = (seed*1664525 + 1013904223) >>> 0) / 4294967296; }
+function skyline(fill, seed, base, minH, maxH, lit){
+  const r = lcg(seed); let x = -10, s = '';
+  while (x < 410){
+    const w = 22 + r()*30, hh = minH + r()*(maxH-minH);
+    s += '<rect x="'+x.toFixed(0)+'" y="'+(base-hh).toFixed(0)+'" width="'+w.toFixed(0)+'" height="'+(hh+2).toFixed(0)+'" fill="'+fill+'"/>';
+    if (lit) for (let wy = base-hh+8; wy < base-8; wy += 12) for (let wx = x+5; wx < x+w-6; wx += 9)
+      if (r() < .22) s += '<rect x="'+wx.toFixed(0)+'" y="'+wy.toFixed(0)+'" width="3.5" height="5" fill="'+lit+'"/>';
+    x += w + r()*4;
+  }
+  return s;
+}
+function books(y, seed){
+  const r = lcg(seed), cols = ['#7a1226','#b3122c','#d9a79f','#5a4a4a','#c9b6b0','#8a3a46'];
+  let x = 46, s = '';
+  while (x < 330){
+    const w = 8 + r()*7, hh = 38 + r()*30;
+    s += '<rect x="'+x.toFixed(0)+'" y="'+(y-hh).toFixed(0)+'" width="'+w.toFixed(0)+'" height="'+hh.toFixed(0)+'" fill="'+cols[Math.floor(r()*cols.length)]+'"/>';
+    x += w + 1;
+  }
+  return s + '<rect x="36" y="'+y+'" width="304" height="6" fill="#7a1226"/>';
+}
+const svg = (inner, defs) => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice"><defs>'+(defs||'')+'</defs>'+inner+'</svg>';
+const PRESETS = [
+  {label:'Web wall', note:'Dark maroon with webs', svg: svg(
+    '<rect width="400" height="300" fill="#2a0505"/><circle cx="300" cy="90" r="130" fill="#d11f35" opacity=".14"/><g>'+webLines('rgba(255,243,232,.4)')+'</g><g transform="translate(400 0) scale(-1 1)">'+webLines('rgba(255,243,232,.3)')+'</g><g transform="translate(400 300) rotate(180)">'+webLines('rgba(255,243,232,.35)')+'</g>')},
+  {label:'City night', note:'Skyline under a red sky', svg: svg(
+    '<rect width="400" height="300" fill="url(#g)"/><circle cx="310" cy="70" r="22" fill="#ffe9d6" opacity=".92"/>'+skyline('#3a0d1c',11,250,40,95,null)+skyline('#12060a',7,300,60,150,'#ffcf9a'),
+    '<linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#12060f"/><stop offset=".6" stop-color="#5b0f24"/><stop offset="1" stop-color="#a3182f"/></linearGradient>')},
+  {label:'Rooftop dusk', note:'Water tower at sunset', svg: svg(
+    '<rect width="400" height="300" fill="url(#g)"/><circle cx="120" cy="190" r="34" fill="#ffd9b0"/>'+skyline('#4a0a1c',23,245,30,70,null)+'<rect y="250" width="400" height="50" fill="#12060a"/><g fill="#12060a"><rect x="270" y="170" width="46" height="40" rx="4"/><path d="M266 170L293 150L320 170z"/><rect x="276" y="210" width="3" height="42"/><rect x="307" y="210" width="3" height="42"/></g>',
+    '<linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff8a5b"/><stop offset=".55" stop-color="#d9253f"/><stop offset="1" stop-color="#3d0713"/></linearGradient>')},
+  {label:'Study nook', note:'Bookshelves and a lamp', svg: svg(
+    '<rect width="400" height="300" fill="#eadfdc"/><rect y="252" width="400" height="48" fill="#d8c9c5"/>'+books(112,5)+books(204,9)+'<path d="M345 52h32l-6 24h-20z" fill="#b3122c"/><rect x="359" y="76" width="4" height="30" fill="#5a4a4a"/>')},
+  {label:'Clean grid', note:'Light and tidy', svg: svg(
+    '<rect width="400" height="300" fill="#f6efef"/>'+(function(){ let g=''; for(let i=0;i<=400;i+=20) g+='<path d="M'+i+' 0V300"/>'; for(let j=0;j<=300;j+=20) g+='<path d="M0 '+j+'H400"/>'; return '<g stroke="#e3cfd2" stroke-width="1">'+g+'</g>'; })()+'<circle cx="320" cy="80" r="46" fill="none" stroke="#b3122c" stroke-opacity=".4" stroke-width="2"/><circle cx="80" cy="220" r="30" fill="#b3122c" fill-opacity=".14"/>')},
+  {label:'Soft maroon', note:'A calm glow', svg: svg(
+    '<rect width="400" height="300" fill="url(#g)"/><circle cx="200" cy="150" r="230" fill="url(#r)"/>',
+    '<linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1b0a0f"/><stop offset="1" stop-color="#3a0f1a"/></linearGradient><radialGradient id="r"><stop offset="0" stop-color="#d9253f" stop-opacity=".45"/><stop offset="1" stop-color="#d9253f" stop-opacity="0"/></radialGradient>')},
+  {label:'Classroom', note:'Whiteboard and floor', svg: svg(
+    '<rect width="400" height="300" fill="#e7dcda"/><rect y="250" width="400" height="50" fill="#d6c6c2"/><rect x="50" y="40" width="300" height="170" rx="6" fill="#fbfaf8" stroke="#7a1226" stroke-width="8"/><path d="M80 82h120M80 108h180M80 134h90" stroke="#b3122c" stroke-width="4" stroke-linecap="round" opacity=".6"/><rect x="50" y="214" width="300" height="8" fill="#7a1226"/>')}
+];
+const svgURI = s => 'url("data:image/svg+xml;utf8,' + encodeURIComponent(s) + '")';
+function renderPng(p){
+  return new Promise((res, rej) => {
+    const big = p.svg.replace('<svg ', '<svg width="1280" height="720" ');
+    const im = new Image();
+    im.onload = () => { try{ const c = document.createElement('canvas'); c.width = 1280; c.height = 720; c.getContext('2d').drawImage(im, 0, 0, 1280, 720); res(c.toDataURL('image/png')); }catch(e){ rej(e); } };
+    im.onerror = rej;
+    im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(big);
+  });
+}
+async function showBg(p){
+  openSheet(p.label, h('p', {class:'sub', text:'Loading…'}));
+  try{
+    const png = await renderPng(p);
+    openSheet(p.label, h('img', {src:png, alt:p.label + ' background preview'}),
+      h('p', {class:'sub', text:'Press and hold the picture, then tap Save to Photos. In Discord, open your camera settings and choose it as your video background.'}));
+  }catch(e){ openSheet(p.label, h('p', {class:'sub', text:'This picture could not be prepared on your device. Try again in Safari.'})); }
+}
+function looks(){
+  return screen(['Back', h('span', {text:'grounds'})],
+    h('p', {class:'sub', text:'Pick a scene, save it to your device, then choose it as your video background in Discord. You can use your own photos there too.'}),
+    h('div', {class:'bggrid'}, PRESETS.map(p => {
+      const b = h('button', {class:'thumb', type:'button', 'aria-label':p.label + ' background', onclick:() => showBg(p)}, h('span', {class:'tl'}, p.label, h('small', {text:p.note})));
+      b.style.backgroundImage = svgURI(p.svg); return b;
+    })));
+}
+
+/* --- focus timer --- */
+function beep(){
+  try{
+    const a = new (window.AudioContext || window.webkitAudioContext)(), o = a.createOscillator(), g = a.createGain();
+    o.frequency.value = 660; o.connect(g); g.connect(a.destination);
+    g.gain.setValueAtTime(.2, a.currentTime); g.gain.exponentialRampToValueAtTime(.001, a.currentTime + .9);
+    o.start(); o.stop(a.currentTime + .9);
+  }catch(e){}
+}
+function timer(){
+  const MODES = {focus:{label:'Focus', s:25*60}, short:{label:'Short break', s:5*60}, long:{label:'Long break', s:15*60}};
+  let mode = 'focus', left = MODES.focus.s, end = 0, tick = null, done = ls.get('pomos', 0);
+  const C = 2*Math.PI*90;
+  const circ = (stroke) => {
+    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    [['cx','100'],['cy','100'],['r','90'],['fill','none'],['stroke',stroke],['stroke-width','10'],['stroke-linecap','round']].forEach(a => c.setAttribute(a[0], a[1]));
+    return c;
+  };
+  const time = h('span', {class:'t'}), prog = circ('#f2b866'), track = circ('#6b1d1d');
+  prog.setAttribute('stroke-dasharray', C.toFixed(1));
+  const ring = h('div', {class:'clock'});
+  const sv = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); sv.setAttribute('viewBox', '0 0 200 200'); sv.setAttribute('aria-hidden', 'true'); sv.append(track, prog);
+  ring.append(sv, time);
+  const count = h('p', {class:'sub', style:'text-align:center'});
+  const startBtn = h('button', {class:'btn gold', type:'button'}, 'Start');
+  const draw = () => {
+    const m = Math.floor(left/60), s = left % 60;
+    time.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    prog.setAttribute('stroke-dashoffset', (C * (1 - left / MODES[mode].s)).toFixed(1));
+    count.textContent = 'Focus sessions finished on this device: ' + done;
+    startBtn.textContent = tick ? 'Pause' : (left < MODES[mode].s ? 'Resume' : 'Start');
+  };
+  const stop = () => { if (tick){ clearInterval(tick); tick = null; } };
+  const step = () => {
+    left = Math.max(0, Math.round((end - Date.now()) / 1000)); draw();
+    if (left <= 0){ stop(); beep(); if (mode === 'focus'){ done++; ls.set('pomos', done); } toast(mode === 'focus' ? 'Focus session done. Take a break.' : 'Break over. Back to it.'); draw(); }
+  };
+  startBtn.addEventListener('click', () => { if (tick){ stop(); draw(); return; } if (left <= 0) left = MODES[mode].s; end = Date.now() + left*1000; tick = setInterval(step, 250); draw(); });
+  const seg = h('div', {class:'seg', role:'group', 'aria-label':'Timer mode'});
+  const drawSeg = () => seg.replaceChildren(...Object.keys(MODES).map(k => h('button', {type:'button', 'aria-pressed':String(k === mode), onclick:() => { stop(); mode = k; left = MODES[k].s; drawSeg(); draw(); }}, MODES[k].label)));
+  drawSeg(); draw();
+  cleanup = stop;
+  return screen(['Focus ', h('span', {text:'timer'})],
+    h('div', {class:'block'}, seg, ring,
+      h('div', {class:'ctrls'}, startBtn, h('button', {class:'btn', type:'button', onclick:() => { stop(); left = MODES[mode].s; draw(); }}, 'Reset')), count));
+}
+
+/* --- group maker --- */
+function namesField(id){
+  const ta = h('textarea', {class:'field', id, placeholder:'One name per line, or separate with commas', 'aria-label':'Class list'});
+  ta.value = ls.get('names', '');
+  ta.addEventListener('input', () => ls.set('names', ta.value));
+  return ta;
+}
+function groups(){
+  const ta = namesField('gNames'), num = h('input', {class:'field', id:'gNum', type:'number', min:'2', max:'20', value:'4', inputmode:'numeric'});
+  const out = h('div', {class:'groups'}), err = h('p', {class:'err', role:'alert'});
+  let last = [];
+  const make = () => {
+    const names = parseNames(ta.value), n = Math.max(2, Math.min(20, parseInt(num.value, 10) || 2));
+    if (names.length < 2){ err.textContent = 'Add at least two names.'; out.replaceChildren(); last = []; return; }
+    err.textContent = '';
+    const k = Math.min(n, names.length), g = Array.from({length:k}, () => []);
+    shuffle(names).forEach((nm, i) => g[i % k].push(nm));
+    last = g;
+    out.replaceChildren(...g.map((m, i) => h('div', {class:'group'}, h('h4', {text:'Group ' + (i+1)}), h('ul', {}, m.map(x => h('li', {text:x}))))));
+  };
+  return screen(['Group ', h('span', {text:'maker'})],
+    h('div', {class:'two'},
+      h('div', {class:'block'},
+        h('label', {class:'fl', for:'gNames'}, 'Class list', ta),
+        h('label', {class:'fl', for:'gNum'}, 'Number of groups', num),
+        err,
+        h('div', {class:'cta', style:'display:flex;gap:10px;flex-wrap:wrap'},
+          h('button', {class:'btn gold', type:'button', onclick:make}, 'Make groups'),
+          h('button', {class:'btn', type:'button', onclick:() => { if (!last.length){ toast('Make groups first'); return; } copyText(last.map((m,i) => 'Group ' + (i+1) + ': ' + m.join(', ')).join('\n'), 'Groups copied'); }}, 'Copy'))),
+      h('div', {class:'block'}, h('h3', {text:'Teams'}), out, h('p', {class:'sub', text:'Your teams appear here. Tap Make groups again for a new mix.'}))));
+}
+
+/* --- pick a presenter --- */
+function pick(){
+  const ta = namesField('pNames'), box = h('div', {class:'pickbox', 'aria-live':'polite', text:'Ready?'});
+  const skip = h('input', {type:'checkbox', id:'pSkip', checked:true});
+  const err = h('p', {class:'err', role:'alert'});
+  let picked = [], timers = [], busy = false;
+  const clear = () => { timers.forEach(clearTimeout); timers = []; busy = false; };
+  const go = () => {
+    if (busy) return;
+    const all = parseNames(ta.value); if (all.length < 2){ err.textContent = 'Add at least two names.'; return; }
+    err.textContent = '';
+    let pool = skip.checked ? all.filter(n => picked.indexOf(n) < 0) : all;
+    if (!pool.length){ picked = []; pool = all; toast('Everyone has gone. Starting over.'); }
+    const winner = pool[rand(pool.length)];
+    busy = true; box.classList.remove('done');
+    let i = 0; const total = 18;
+    const spin = () => {
+      i++;
+      if (i >= total){ box.textContent = winner; box.classList.add('done'); if (skip.checked) picked.push(winner); busy = false; return; }
+      box.textContent = all[rand(all.length)];
+      timers.push(setTimeout(spin, 60 + i*i*0.9));
+    };
+    spin();
+  };
+  cleanup = clear;
+  return screen(['Pick a ', h('span', {text:'presenter'})],
+    h('div', {class:'two'},
+      h('div', {class:'block'},
+        h('label', {class:'fl', for:'pNames'}, 'Class list', ta),
+        h('label', {class:'checkrow', for:'pSkip'}, skip, 'Skip people who already went'),
+        err),
+      h('div', {class:'block'}, box,
+        h('div', {style:'display:flex;gap:10px;flex-wrap:wrap'},
+          h('button', {class:'btn gold', type:'button', onclick:go}, 'Pick someone'),
+          h('button', {class:'btn', type:'button', onclick:() => { clear(); picked = []; box.classList.remove('done'); box.textContent = 'Ready?'; }}, 'Start over')))));
+}
+
+const VIEWS = {landing, home, meet, chat, looks, timer, groups, pick};
+drawAuth();
+show(auth.signedIn() ? 'home' : 'landing');
+})();
+</script>
+</body>
+</html>
