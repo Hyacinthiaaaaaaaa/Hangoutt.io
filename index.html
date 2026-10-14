@@ -177,6 +177,30 @@ footer{position:relative;z-index:1;padding:24px 0 36px;color:var(--muted);font-s
 <div class="toast" id="toast" hidden></div>
 
 <script>
+/* Support for older iPad / Safari versions */
+if (!Element.prototype.replaceChildren){
+  Element.prototype.replaceChildren = function(){
+    while (this.firstChild) this.removeChild(this.firstChild);
+    for (var i = 0; i < arguments.length; i++){ var a = arguments[i]; this.appendChild(a && a.nodeType ? a : document.createTextNode(String(a))); }
+  };
+}
+if (!Array.prototype.flat){
+  Object.defineProperty(Array.prototype, 'flat', { value: function(){ return this.reduce(function(acc, x){ return acc.concat(x); }, []); }, writable: true, configurable: true });
+}
+if (!String.prototype.padStart){
+  String.prototype.padStart = function(n, ch){ var s = String(this); ch = ch === undefined ? ' ' : String(ch); while (s.length < n) s = ch + s; return s; };
+}
+</script>
+<script>
+window.addEventListener('error', function(e){
+  var v = document.getElementById('view'); if (!v) return;
+  var d = document.createElement('div');
+  d.style.cssText = 'margin:24px 0;padding:16px;border:1px solid #f2b866;border-radius:12px;color:#fff3e8;background:#380909;font:14px/1.5 system-ui,sans-serif';
+  d.textContent = 'hangout.io could not start. Message: ' + (e.message || 'unknown error') + (e.lineno ? ' (line ' + e.lineno + ')' : '') + '. Upload the original index.html again.';
+  v.appendChild(d);
+});
+</script>
+<script>
 (function(){
 'use strict';
 
@@ -188,10 +212,10 @@ footer{position:relative;z-index:1;padding:24px 0 36px;color:var(--muted);font-s
 const CONFIG = {
   serverInvite: 'https://discord.gg/YOUR_INVITE',
   rooms: [
-    {name:'Study Hall',    topic:'Open room for quiet group study. Cameras optional.', link:https://discord.gg/yyGkFcMJ
-    {name:'Group Project', topic:'Work on shared assignments and split up tasks.',     link:https://discord.gg/KZd3PtnP
-    {name:'Exam Prep',     topic:'Quiz each other and go over past papers.',           link:https://discord.gg/PPre7UnG
-    {name:'Lounge',        topic:'Take a break and talk about anything but homework.', link:https://discord.gg/szZNYEf8
+    {name:'Study Hall',    topic:'Open room for quiet group study. Cameras optional.', link:'https://discord.gg/YOUR_INVITE'},
+    {name:'Group Project', topic:'Work on shared assignments and split up tasks.',     link:'https://discord.gg/YOUR_INVITE'},
+    {name:'Exam Prep',     topic:'Quiz each other and go over past papers.',           link:'https://discord.gg/YOUR_INVITE'},
+    {name:'Lounge',        topic:'Take a break and talk about anything but homework.', link:'https://discord.gg/YOUR_INVITE'}
   ]
 };
 /* ======================= */
